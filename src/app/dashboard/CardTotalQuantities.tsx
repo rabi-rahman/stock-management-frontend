@@ -33,7 +33,7 @@ const CardTotalQuantities = () => {
       const COLORS = ['#00C49F', '#FF8042'];
 
       const totalTransactionsQty = saleQuantity + returnQuantity;
-      const totalProductQuantity = DashboardMetrics.totalProductQuantity;
+      // const totalProductQuantity = DashboardMetrics.totalProductQuantity;
       const salePercentage = ((saleQuantity / totalTransactionsQty) * 100).toFixed(0);
     
   return (
