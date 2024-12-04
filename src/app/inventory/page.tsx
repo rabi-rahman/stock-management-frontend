@@ -12,7 +12,7 @@ const columns:GridColDef[] = [
     {
       field: "price",
       headerName: "Price",
-      width: 110,
+      width: 80,
       type: "number",
       valueGetter: (value,row) => `﷼
        ${row.price}`,
@@ -20,8 +20,13 @@ const columns:GridColDef[] = [
     {
       field: "quantity",
       headerName: "Stock Quantity",
-      width: 150,
+      width: 100,
       type: "number",
+    },
+    {
+      field: "location",
+      headerName: "Location",
+      width: 350,
     },
     { 
       field: "createdDate",
