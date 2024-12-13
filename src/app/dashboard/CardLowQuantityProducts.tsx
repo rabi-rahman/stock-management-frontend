@@ -31,7 +31,7 @@ const CardLowQuantityProducts = () => {
                     {product.code}
                       <span className="mx-2">|</span>
                       <span className="font-bold text-blue-500 text-xs ">
-                        {product.price} SAR  
+                        {product.row} 
                       </span>
                     </div>
                   </div>

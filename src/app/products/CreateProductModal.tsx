@@ -1,15 +1,14 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { v4 } from "uuid";
 import Header from "../(components)/Header";
 import { toast } from "sonner";
 
 type ProductFormData = {
-  name: string;
+  name?: string;
   code: string;
   description?: string;
-  price: number;
+  row?: string;
   quantity: number;
-  location: string;
   createdAt: string;
 };
 
@@ -29,76 +28,34 @@ const CreateProductModel = ({
     name: "",
     code: "",
     description: "",
-    price: 0,
+    row: "",
     quantity: 0,
-    location: "",
     createdAt: new Date().toISOString(),
   });
 
-  const [locationQuery, setLocationQuery] = useState("");
-  const [locationSuggestions, setLocationSuggestions] = useState<any[]>([]);
+  const codeInputRef = useRef<HTMLInputElement>(null); // Reference to the code input
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === "price" || name === "quantity" ? parseFloat(value) : value,
+      [name]: name === "quantity" ? parseFloat(value) : value,
     });
-  };
-
-  const handleLocationChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setLocationQuery(query);
-
-    if (query.trim().length > 2) {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          query
-        )}&format=json&addressdetails=1`
-      );
-      const data = await response.json();
-      setLocationSuggestions(
-        data.map((location: any) => ({
-          label: location.display_name,
-          lat: location.lat,
-          lon: location.lon,
-        }))
-      );
-    } else {
-      setLocationSuggestions([]);
-    }
-  };
-
-  const selectLocation = (location: any) => {
-    setFormData({ ...formData, location: location.label });
-    setLocationQuery(location.label);
-    setLocationSuggestions([]);
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.name.trim()) {
-      toast.error("Product Name is required.");
-      return;
-    }
 
     if (!formData.code.trim()) {
       toast.error("Product Code is required.");
       return;
     }
 
-    if (formData.price <= 0) {
-      toast.error("Price must be greater than 0.");
-      return;
-    }
-
     if (formData.quantity < 0) {
       toast.error("Quantity cannot be negative.");
       return;
-    }
-
-    if (!formData.location.trim()) {
-      toast.error("Please select a location.");
+    } else if (formData.quantity === 0) {
+      toast.error("Quantity cannot be empty.");
       return;
     }
 
@@ -113,17 +70,18 @@ const CreateProductModel = ({
       name: "",
       code: "",
       description: "",
-      price: 0,
+      row: "",
       quantity: 0,
-      location: "",
       createdAt: new Date().toISOString(),
     });
-    setLocationQuery("");
-    setLocationSuggestions([]);
   };
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (codeInputRef.current) {
+        codeInputRef.current.focus();
+      }
+    } else {
       resetForm();
     }
   }, [isOpen]);
@@ -131,16 +89,29 @@ const CreateProductModel = ({
   if (!isOpen) return null;
 
   const labelCssStyles = "block text-sm font-medium text-gray-700";
-  const inputCssStyles =
-    "block w-full mb-2 p-2 border-gray-500 border-2 rounded-md bg-gray-100 focus:bg-white";
+  const inputCssStyles = "block w-full mb-2 p-2 border-gray-500 border-2 rounded-md bg-gray-100 focus:bg-white";
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-20">
       <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <Header name="Create New Product" />
         <form onSubmit={handleSubmit} className="mt-5">
-        <label htmlFor="productName" className={labelCssStyles} >
-             Product Name
+          <label htmlFor="productCode" className={labelCssStyles}>
+            Code
+          </label>
+          <input
+            ref={codeInputRef}
+            type="text"
+            name="code"
+            placeholder="Code"
+            onChange={handleChange}
+            value={formData.code}
+            className={inputCssStyles}
+            required
+          />
+          
+          <label htmlFor="productName" className={labelCssStyles} >
+            Product Name
           </label>
           <input  
             type="text"
@@ -149,20 +120,6 @@ const CreateProductModel = ({
             onChange={handleChange}
             value={formData.name}
             className={inputCssStyles}
-            required
-          />
-
-          <label htmlFor="productCode" className={labelCssStyles}>
-            Code
-          </label>
-          <input
-            type="text"
-            name="code"
-            placeholder="Code"
-            onChange={handleChange}
-            value={formData.code}
-            className={inputCssStyles}
-            required
           />
 
           <label htmlFor="productDescription" className={labelCssStyles}>
@@ -178,16 +135,15 @@ const CreateProductModel = ({
           />
 
           <label htmlFor="productPrice" className={labelCssStyles}>
-            Price
+            Row
           </label>
           <input
-            type="number"
-            name="price"
-            placeholder="Price"
+            type="text"
+            name="row"
+            placeholder="row"
             onChange={handleChange}
-            value={formData.price}
+            value={formData.row}
             className={inputCssStyles}
-            required
           />
           
           <label htmlFor="productQuantity" className={labelCssStyles}>
@@ -202,32 +158,6 @@ const CreateProductModel = ({
             className={inputCssStyles}
             required
           />
-
-          <label htmlFor="productLocation" className={labelCssStyles}>
-            Location
-          </label>
-          <input
-            type="text"
-            name="locationQuery"
-            placeholder="Search for a location"
-            onChange={handleLocationChange}
-            value={locationQuery}
-            className={inputCssStyles}
-          />
-
-          {locationSuggestions.length > 0 && (
-            <ul className="bg-white border rounded-md shadow-md max-h-48 overflow-auto">
-              {locationSuggestions.map((location, index) => (
-                <li
-                  key={index}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => selectLocation(location)}
-                >
-                  {location.label}
-                </li>
-              ))}
-            </ul>
-          )}
 
           <button
             type="submit"

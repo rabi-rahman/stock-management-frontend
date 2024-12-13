@@ -30,7 +30,7 @@ const CardLastTransactions = () => {
                   <div className="flex items-center font-bold gap-3">
                     {transactions.quantity}
                       <div className="font-bold text-gray-700">
-                        {transactions.product.name}
+                        {transactions.product?.name}
                       </div>
                       <div className="flex text-sm items-center">
                         <span className={`font-bold text-xs ${transactions.transactionType === 'sale' ? 'text-green-500': 'text-orange-500'}`}>

@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useState, useRef } from 'react';
 import { useGetProductsQuery } from '../state/api';
 import { v4 } from 'uuid';
 import Header from '../(components)/Header';
@@ -24,31 +24,35 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [quantity, setQuantity] = useState<number | ''>('');
   const [remarks, setRemarks] = useState<string>('');
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   const { data: products, isLoading, refetch } = useGetProductsQuery();
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const handleProductSelect = (product: any) => {
     setSelectedProduct(product);
     setSearchTerm('');
+    setHighlightedIndex(-1);
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedProduct) {
-        toast.error('Please select a product.');
+      toast.error('Please select a product.');
       return;
     }
 
     if (quantity === '' || Number(quantity <= 0)) {
-        toast.error('Quantity Must be greater than 0.');
+      toast.error('Quantity must be greater than 0.');
       return;
     }
 
     if (selectedProduct.quantity < Number(quantity)) {
-        toast.error('Insufficient stock.');
-        return;
-      }
+      toast.error('Insufficient stock.');
+      return;
+    }
 
     const transactionData: TransactionFormData = {
       transactionId: v4(),
@@ -61,26 +65,52 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
 
     onCreate(transactionData);
     resetForm();
-    refetch();
   };
 
   const resetForm = () => {
     setSelectedProduct(null);
     setQuantity('');
     setRemarks('');
-  }
+    setHighlightedIndex(-1); 
+    refetch();
+  };
+
+
+  const filteredProducts = products?.filter((product) =>
+    product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      if (highlightedIndex < (filteredProducts?.length || 0) - 1) {
+        setHighlightedIndex(highlightedIndex + 1);
+      }
+    } else if (e.key === 'ArrowUp') {
+      if (highlightedIndex > 0) {
+        setHighlightedIndex(highlightedIndex - 1);
+      }
+    } else if (e.key === 'Enter') {
+      if (highlightedIndex >= 0) {
+        handleProductSelect(filteredProducts[highlightedIndex]);
+      }
+      e.preventDefault();
+    }
+  };
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    } else {
       resetForm();
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const filteredProducts = products?.filter((product: any) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-20">
@@ -91,10 +121,12 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
             Product
           </label>
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search product..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown} 
             className="block w-full mb-2 p-2 border-gray-500 border-2 rounded-md bg-gray-100 focus:bg-white"
           />
           {searchTerm && (
@@ -102,13 +134,15 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
               {isLoading ? (
                 <div className="p-2 text-gray-500">Loading...</div>
               ) : filteredProducts && filteredProducts.length > 0 ? (
-                filteredProducts.map((product: any) => (
+                filteredProducts.map((product: any, index: number) => (
                   <div
                     key={product.productId}
-                    className="p-2 cursor-pointer hover:bg-gray-100"
+                    className={`p-2 cursor-pointer hover:bg-gray-100 ${
+                      highlightedIndex === index ? 'bg-gray-200' : ''
+                    }`} 
                     onClick={() => handleProductSelect(product)}
                   >
-                    {product.name} - {product.code}
+                    code: {product.code} | name: {product.name}
                   </div>
                 ))
               ) : (
@@ -119,9 +153,10 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
           {selectedProduct && (
             <div className="mt-4 border border-gray-300 rounded-md p-2">
               <h3 className="text-gray-700 font-semibold">Selected Product:</h3>
-              <p className="text-gray-600 mt-1">Name: {selectedProduct.name}</p>
               <p className="text-gray-600 mt-1">Code: {selectedProduct.code}</p>
-              <p className="text-gray-600 mt-1">Price: ﷼{selectedProduct.price}</p>
+              <p className="text-gray-600 mt-1">Name: {selectedProduct.name}</p>
+              <p className="text-gray-600 mt-1">Description: {selectedProduct.description}</p>
+              <p className="text-gray-600 mt-1">Row: {selectedProduct.row}</p>
               <p className="text-gray-600 mt-1">
                 Quantity Available: {selectedProduct.quantity}
               </p>

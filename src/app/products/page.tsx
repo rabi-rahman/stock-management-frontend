@@ -8,10 +8,10 @@
   import { toast } from "sonner";
 
   type ProductFormData = {
-      name: string;
+      name?: string;
       code: string;
       description?: string;
-      price: number;
+      row?: string;
       quantity: number;
       createdAt: string;
     };
@@ -55,8 +55,9 @@
       const filteredProducts = Products?.filter((product) => {
       const lowercasedSearchTerm = searchTerm.toLowerCase();
       return (
-        product.name.toLowerCase().includes(lowercasedSearchTerm) ||
-        product.code.toLowerCase().includes(lowercasedSearchTerm)
+        product.name?.toLowerCase().includes(lowercasedSearchTerm) ||
+        product.code.toLowerCase().includes(lowercasedSearchTerm) ||
+        product.description?.toLowerCase().includes(lowercasedSearchTerm)
       );
     });
 
@@ -88,7 +89,7 @@
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg-grid-cols-3 gap-10 justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg-grid-cols-3 gap-10 justify-between">
           {isLoading ? (
             <div>Loading...</div>
           ) : (
@@ -96,24 +97,23 @@
                   filteredProducts.map((product) => (
               <div
                 key={product.productId}
-                className="border shadow rounded-md p-4 max-w-full w-full mx-auto"
+                className="border shadow rounded-md bg-gray-50 text-gray-900 p-4 max-w-full w-full mx-auto"
               >
-              <div className="flex flex-col items-center">img
-                  <div className="flex items-center gap-3">
-                  <h3 className="text-lg text-gray-900 font-semibold">
-                    {product.name}
-                  </h3>
-                  <h3>|</h3>
-                  <h3 className="text-lg text-gray-900 font-semibold">
-                    {product.code}
-                  </h3>
-                  </div>
+                <div className="flex flex-col items-center gap-3">
+                      <h3 className="text-3xl text-blue-500 font-semibold">
+                        {product.code}
+                      </h3>
+                    
+                    <div className="flex flex-row gap-6"> 
+                      <h3 className="text-base">NAME : {product.name} </h3> 
+                      <h3> | </h3>                   
+                      <h3 className="text-base">ROW : {product.row}</h3>
+                    </div>
               
-                  <p className="text-gray-800 mt-1">﷼ {product.price}</p>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Stock: {product.quantity}
+                  <div className="text-lg mt-1 p-2">
+                    STOCK : {product.quantity}
                   </div>
-                  {product.description}z
+                  <h3 className="text-base">DESCRIPTION : {product.description}</h3>
                 </div>
               </div>
             ))

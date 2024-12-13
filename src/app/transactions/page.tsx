@@ -21,6 +21,7 @@ const Transactions = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [IsShopOpen, setIsShopOpen] = useState(false);
   const [IsStoreOpen, setIsStoreOpen] = useState(false);
+  const [transactionFilter, setTransactionFilter] = useState("all");
 
   const { data: Transaction, isLoading, isError } = useGetTransactionsQuery();
 
@@ -64,11 +65,16 @@ const Transactions = () => {
 
   const filteredTransactions = Transaction?.filter((transactions) => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-    return (
-      transactions.product.name.toLowerCase().includes(lowercasedSearchTerm) ||
-      transactions.product.code.toLowerCase().includes(lowercasedSearchTerm) ||
-      transactions.transactionType.toLowerCase().includes(lowercasedSearchTerm)
-    );
+    const matchesSearchTerm =
+      transactions.product?.description?.toLowerCase().includes(lowercasedSearchTerm) ||
+      transactions.product?.code.toLowerCase().includes(lowercasedSearchTerm) ||
+      transactions.product?.name?.toLowerCase().includes(lowercasedSearchTerm);
+
+    const matchesFilter =
+      transactionFilter === "all" ||
+      transactions.transactionType.toLowerCase() === transactionFilter;
+
+    return matchesSearchTerm && matchesFilter;
   });
 
   return (
@@ -88,12 +94,23 @@ const Transactions = () => {
       <div className="flex justify-between">
         <Header name="Transactions" />
 
-        <div className="flex flex-rowjustify-end items-center mb-6 gap-4 ml-5">
+        <div className="flex items-center gap-4 mb-5">
+
+        <select
+            className="py-2 px-4 border rounded bg-gray-200 text-gray-900"
+            value={transactionFilter}
+            onChange={(e) => setTransactionFilter(e.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="sale">Sale</option>
+            <option value="return">Return</option>
+          </select>
+
           <button 
             className="flex items-center bg-gray-900 hover:bg-orange-400 text-gray-200 font-bold py-2 px-4 rounded"
             onClick={() => setIsStoreOpen(true)}>
             <PackagePlusIcon className="w-5 h-5 mr-2 !text-gray-200" /> 
-            <span className="hidden sm:inline">Add to Store</span>
+            <span className="hidden sm:inline">Return to Store</span>
             <span className="sm:hidden">Store</span>
           </button>
           <button
@@ -117,9 +134,9 @@ const Transactions = () => {
               <table className="w-full table-auto">
                 <thead className="bg-gray-800 text-gray-100">
                   <tr className="text-left border-b">
-                    <th className="py-6 px-4 font-semibold">Product Name</th>
                     <th className="py-6 px-4 font-semibold">Product Code</th>
-                    <th className="py-6 px-4 font-semibold">Product Price</th>
+                    <th className="py-6 px-4 font-semibold">Product Name</th>
+                    <th className="py-6 px-4 font-semibold">Row</th>
                     <th className="py-6 px-4 font-semibold">Quantity</th>
                     <th className="py-6 px-4 font-semibold">Transaction</th>
                     <th className="py-6 px-4 font-semibold">Remarks</th>
@@ -141,13 +158,13 @@ const Transactions = () => {
                         className="border-b hover:bg-gray-50"
                       >
                         <td className="py-8 px-4 font-semibold">
-                          {transactions.product?.name || '-'}
+                          {transactions.product?.code}
                         </td>
                         <td className="py-8 px-4 font-semibold">
-                          {transactions.product.code}
+                          {transactions.product?.name? transactions.product.name : '-'}
                         </td>
                         <td className="py-8 px-4 font-semibold">
-                          ﷼ {transactions.product.price}
+                          {transactions.product?.row? transactions.product.row : '-'}
                         </td>
                         <td className="py-8 px-4 font-semibold">
                           {transactions.quantity}

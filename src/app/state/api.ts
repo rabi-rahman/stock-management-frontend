@@ -3,29 +3,30 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
  
 export interface Product{
     productId:string,
-    name:string,
+    name?:string,
     code:string,
     description?:string,
-    price:number,
+    row?:string
     quantity:number,
+    createdAt:string
 }
 
 export interface newProduct{
-    name:string,
+    name?:string,
     code:string,
     description?:string,
-    price:number,
+    row?:string,
     quantity:number,
 }
 
 export interface Transaction{
     transactionId:string,
-    productId:string,
+    productId?:string,
     quantity:number,
     transactionType:string,
     date:string,
     remarks?:string,
-    product:Product
+    product?:Product
 }
 export interface newTransaction{
     productId:string,
@@ -47,8 +48,6 @@ export interface DashboardMetrics{
     lastTransactions: Transaction[],
     totalTransactionsQuantity: TotalTransactionsQuantity[],
     totalProductQuantity: number
-
-
 }
 
 export const api = createApi({
@@ -75,6 +74,23 @@ export const api = createApi({
                 body: newProduct
             }),
             invalidatesTags: ['Products']
+        }),
+
+        deleteProduct: build.mutation<void, string>({
+            query: (productId) => ({
+                url: `/products/${productId}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ['Products'],
+        }),
+
+        editProduct: build.mutation<Product, { productId: string; updatedProduct: Partial<Product> }>({
+            query: ({ productId, updatedProduct }) => ({
+                url: `/products/${productId}`,
+                method: "PUT",
+                body: updatedProduct,
+            }),
+            invalidatesTags: ["Products"],
         }),
 
         getTransactions : build.query<Transaction[], string | void>({
@@ -104,4 +120,4 @@ export const api = createApi({
     }) ,
 });
     
-export const { useGetDashboardMetricsQuery, useGetProductsQuery, useCreateProductMutation, useGetTransactionsQuery, useProductSaleMutation, useProductReturnMutation } = api ;
+export const { useGetDashboardMetricsQuery, useGetProductsQuery, useCreateProductMutation, useGetTransactionsQuery, useProductSaleMutation, useProductReturnMutation, useDeleteProductMutation, useEditProductMutation } = api ;
