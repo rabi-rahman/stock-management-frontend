@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Header from "@/app/(components)/Header";
+import { useRouter } from "next/navigation"; // For navigation
 
 type UserSetting = {
   label: string;
@@ -14,16 +15,23 @@ const mockSettings: UserSetting[] = [
   { label: "Email", value: "coming soon", type: "text" },
   { label: "Notification", value: true, type: "toggle" },
   { label: "Dark Mode", value: false, type: "toggle" },
-  { label: "Language", value: "English", type: "text", },
+  { label: "Language", value: "English", type: "text" },
 ];
 
 const Settings = () => {
   const [userSettings, setUserSettings] = useState<UserSetting[]>(mockSettings);
+  const router = useRouter(); // To navigate on logout
 
   const handleToggleChange = (index: number) => {
     const settingsCopy = [...userSettings];
     settingsCopy[index].value = !settingsCopy[index].value as boolean;
     setUserSettings(settingsCopy);
+  };
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated"); // Clear authentication flag
+    router.push("/"); // Redirect to the login page
   };
 
   return (
@@ -68,11 +76,6 @@ const Settings = () => {
                       className="px-4 py-2 border rounded-lg text-gray-900 bg-gray-100 focus:outline-none focus:border-blue-500"
                       value={setting.value as string}
                       readOnly
-                      onChange={(e) => {
-                        const settingsCopy = [...userSettings];
-                        settingsCopy[index].value = e.target.value;
-                        setUserSettings(settingsCopy);
-                      }}
                     />
                   )}
                 </td>
@@ -81,8 +84,18 @@ const Settings = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Logout Button */}
+      <div className="mt-8 flex justify-center">
+        <button
+          onClick={handleLogout}
+          className="px-6 py-3 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 };
 
-export default Settings; 
+export default Settings;

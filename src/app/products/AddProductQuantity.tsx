@@ -1,32 +1,21 @@
 import React, { FormEvent, useEffect, useState, useRef } from 'react';
-import { useGetProductsQuery } from '../state/api';
-import { v4 } from 'uuid';
-import Header from '../(components)/Header';
+import { useGetProductsQuery, useAddStockMutation } from '../state/api';
 import { toast } from 'sonner';
+import Header from '../(components)/Header';
 
-type TransactionFormData = {
-  transactionId: string;
-  productId: string;
-  quantity: number;
-  transactionType: string;
-  date: string;
-  remarks?: string;
-};
-
-type AddToShopModalProps = {
+type AddProductQuantityModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (transactionData: TransactionFormData) => void;
 };
 
-const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
+const AddProductQuantityModal = ({ isOpen, onClose }: AddProductQuantityModalProps) => {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [quantity, setQuantity] = useState<number | ''>('');
-  const [remarks, setRemarks] = useState<string>('');
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   const { data: products, isLoading, refetch } = useGetProductsQuery();
+  const [addStock] = useAddStockMutation();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,7 +25,7 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
     setHighlightedIndex(-1);
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedProduct) {
@@ -44,44 +33,41 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
       return;
     }
 
-    if (quantity === '' || Number(quantity <= 0)) {
+    console.log(Number(quantity))
+    console.log(selectedProduct.productId)
+
+    if (quantity === '' || Number(quantity) <= 0) {
       toast.error('Quantity must be greater than 0.');
       return;
     }
 
-    if (selectedProduct.quantity < Number(quantity)) {
-      toast.error('Insufficient stock.');
-      return;
+    try {
+      await addStock({
+        productId: selectedProduct.productId,
+        quantity: Number(quantity),
+      }).unwrap();
+
+      toast.success('Stock quantity updated successfully!');
+      resetForm();
+    } catch (error) {
+      toast.error('Failed to update stock quantity.');
     }
-
-    const transactionData: TransactionFormData = {
-      transactionId: v4(),
-      productId: selectedProduct.productId,
-      quantity: Number(quantity),
-      transactionType: 'sale',
-      date: new Date().toISOString(),
-      remarks,
-    };
-
-    onCreate(transactionData);
-    resetForm();
   };
 
   const resetForm = () => {
     setSelectedProduct(null);
     setQuantity('');
-    setRemarks('');
-    setHighlightedIndex(-1); 
+    setHighlightedIndex(-1);
     refetch();
   };
 
+  const filteredProducts =
+    products?.filter((product) =>
+      product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
 
-  const filteredProducts = products?.filter((product) =>
-    product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
-
-  const handleKeyDown = (e: React.KeyboardEvent) =>  {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       if (highlightedIndex < (filteredProducts?.length || 0) - 1) {
         setHighlightedIndex(highlightedIndex + 1);
@@ -110,12 +96,10 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
 
   if (!isOpen) return null;
 
-
-
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-20">
       <div className="relative top-20 mx-auto p-5 border w-[400px] shadow-lg rounded-md bg-white">
-        <Header name="Add Product to Shop" />
+        <Header name="Add Stock Quantity" />
         <form onSubmit={handleSubmit} className="mt-5">
           <label className="block text-sm font-medium text-gray-700 mt-3 mb-2">
             Product
@@ -126,7 +110,7 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
             placeholder="Search product..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown} 
+            onKeyDown={handleKeyDown}
             className="block w-full mb-2 p-2 border-gray-500 border-2 rounded-md bg-gray-100 focus:bg-white"
           />
           {searchTerm && (
@@ -139,7 +123,7 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
                     key={product.productId}
                     className={`p-2 cursor-pointer hover:bg-gray-100 ${
                       highlightedIndex === index ? 'bg-gray-200' : ''
-                    }`} 
+                    }`}
                     onClick={() => handleProductSelect(product)}
                   >
                     code: {product.code} | name: {product.name}
@@ -165,7 +149,7 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
           {selectedProduct && (
             <>
               <label className="block text-sm font-medium text-gray-700 mt-3 mb-2">
-                Quantity
+                Quantity to Add
               </label>
               <input
                 type="number"
@@ -174,14 +158,6 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
                 className="block w-full mb-2 p-2 border-gray-500 border-2 rounded-md bg-gray-100 focus:bg-white"
                 min={1}
               />
-              <label className="block text-sm font-medium text-gray-700 mt-3 mb-2">
-                Remarks
-              </label>
-              <textarea
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                className="block w-full mb-2 p-2 border-gray-500 border-2 rounded-md bg-gray-100 focus:bg-white"
-              ></textarea>
             </>
           )}
           <button
@@ -203,4 +179,4 @@ const AddToShopModal = ({ isOpen, onClose, onCreate }: AddToShopModalProps) => {
   );
 };
 
-export default AddToShopModal;
+export default AddProductQuantityModal;

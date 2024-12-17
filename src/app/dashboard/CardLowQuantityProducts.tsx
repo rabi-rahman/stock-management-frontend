@@ -22,28 +22,31 @@ const CardLowQuantityProducts = () => {
                     className="flex items-center justify-between gap-3 px-5 py-7 border-b"
                 >
                 <div className="flex items-center gap-3">
-                  <div>img</div>
                   <div className="flex flex-col justify-between gap-1">
-                    <div className="font-bold text-gray-700">
-                      {product.name}
+                    <div className="font-bold text-gray-700 text-xl">
+                      {product.code}
                     </div>
-                    <div className="flex text-sm items-center">
-                    {product.code}
+                    <div className="flex font-bold text-sm items-center">
+                    {product.name}
                       <span className="mx-2">|</span>
                       <span className="font-bold text-blue-500 text-xs ">
-                        {product.row} 
+                       {product.description}
+                       </span>
+                      <span className="mx-2">|</span>
+                      <span className="font-bold text-xs ">
+                       {product.row}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className={`text-xs flex items-center ${product.quantity < 5 ? 'text-red-500' : 'text-slate-100'}`}>
+                <div className={`text-xs flex items-center ${product.quantity <= 5 ? 'text-red-500' : 'text-gray-900'}`}>
                   {product.quantity}
                 </div>
               </div>
             ))}
           </div>
-            </>
+        </>
         )}
     </div>
   )
