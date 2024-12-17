@@ -26,7 +26,7 @@ export default function Login() {
         <input
           type="password"
           placeholder="Enter Password"
-          className="w-full p-2 mb-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-100"
+          className="w-full p-2 mb-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
