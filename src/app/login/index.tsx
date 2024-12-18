@@ -6,8 +6,8 @@ import { Eye, EyeOff } from "lucide-react";
 export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // State for loading status
-  const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
+  const [loading, setLoading] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false); 
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -15,6 +15,8 @@ export default function Login() {
     setError(""); 
 
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     if (password === correctPassword) {
       localStorage.setItem("isAuthenticated", "true");
