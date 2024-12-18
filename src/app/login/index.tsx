@@ -6,10 +6,14 @@ import { Eye, EyeOff } from "lucide-react";
 export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // State for loading status
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
   const router = useRouter();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(""); 
+
     const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
     if (password === correctPassword) {
@@ -18,6 +22,7 @@ export default function Login() {
     } else {
       setError("Incorrect password. Please try again.");
     }
+    setLoading(false); 
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,19 +46,23 @@ export default function Login() {
             <button
               type="button"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              onClick={() => setShowPassword(!showPassword)} // Toggle showPassword state
+              onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <Eye size={16} className="text-gray-200 mb-2" />
+                <Eye size={16} className="text-gray-500" />
               ) : (
-                <EyeOff size={16} className="text-gray-500 mb-2" />
+                <EyeOff size={16} className="text-gray-500" />
               )}
             </button>
           </div>
-          {error && <p className="text-red-500 mb-3 text-sm">{error}</p>}
+          {loading && <p className="text-blue-500 mb-3 text-sm">Signing in...</p>} 
+          {error && <p className="text-red-500 mb-3 text-sm">{error}</p>} 
           <button
             type="submit"
-            className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className={`w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={loading}
           >
             Login
           </button>
